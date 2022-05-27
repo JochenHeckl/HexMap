@@ -1,0 +1,15 @@
+{
+  "name": "de.jochenheckl.unity.hexmap",
+  "displayName": "HexMap",
+  "version": "1.0.0",
+  "unity": "2022.1",
+  "description": "This package contains some utilities to deal with hex meshes. Inspired by redblobgames excellent information on the [Implementation of Hex Grids](https://www.redblobgames.com/grids/hexagons/implementation.html)",
+  "type": "library",
+  "samples": [
+    {
+      "displayName": "BlockMeshGenerator",
+      "description": "Simple example demonstrating BlockMeshGenerator",
+      "path": "Samples~/BlockMeshGenerator"
+    }
+  ]
+}

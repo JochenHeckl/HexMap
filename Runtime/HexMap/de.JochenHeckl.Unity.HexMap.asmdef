@@ -1,0 +1,16 @@
+{
+    "name": "de.JochenHeckl.Unity.HexMap",
+    "rootNamespace": "de.JochenHeckl.Unity.HexMap",
+    "references": [
+        "GUID:c135f9a901e8b48408aeb2b8bb575ee1"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
