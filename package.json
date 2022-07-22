@@ -10,6 +10,11 @@
       "displayName": "BlockMeshGenerator",
       "description": "Simple example demonstrating BlockMeshGenerator",
       "path": "Samples~/BlockMeshGenerator"
+    },
+    {
+      "displayName": "HexMeshGenerator",
+      "description": "Simple example demonstrating HexMeshGenerator",
+      "path": "Samples~/HexMeshGenerator"
     }
   ]
 }

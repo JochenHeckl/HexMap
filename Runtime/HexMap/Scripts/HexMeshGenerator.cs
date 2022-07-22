@@ -8,6 +8,10 @@ using UnityEngine.Rendering;
 
 namespace de.JochenHeckl.Unity.HexMap
 {
+    /// <summary>
+    /// Generates a simple hexagonal mesh
+    /// </summary>
+    /// <typeparam name="TileDataType"></typeparam>
     public class HexMeshGenerator<TileDataType> : IHexMeshGenerator<TileDataType>
         where TileDataType : ITileData
     {
@@ -46,6 +50,8 @@ namespace de.JochenHeckl.Unity.HexMap
 
         private float hexRadius;
         private Func<Vector2, float> getTileHeight;
+
+        public static float FlatTiles(Vector2 _) => 0f;
 
         public HexMeshGenerator(float hexRadius, Func<Vector2, float> getTileHeight)
         {
