@@ -91,7 +91,7 @@ namespace de.JochenHeckl.Unity.HexMap
             return new Vector2()
             {
                 x = hexRadius * threeOverTwo * q,
-                y = hexRadius * ((sqrtThreeOverTwo * q) + (sqrtThree * r))
+                y = -(hexRadius * ((sqrtThreeOverTwo * q) + (sqrtThree * r)))
             };
         }
 
@@ -106,22 +106,23 @@ namespace de.JochenHeckl.Unity.HexMap
         }
 
         /// <summary>
-        /// Finds the neighbours for the given tile
+        /// Enumerates the coordinates of the neighbour tiles for the given tile
         /// </summary>
         /// <param name="center">Center tile to find neighbours for</param>
         /// <returns>
-        /// Neighbouring tiles starting at the top running clock wise
+        /// The coordinates of the neighbour tiles for the given tile.
+        /// Assuming flat top topology. Starting at the top running clock wise.
         /// </returns>
         public static AxialCoordinateInt[] Neighbours(AxialCoordinateInt center)
         {
             return new AxialCoordinateInt[]
             {
-                new AxialCoordinateInt(center.q + 0, center.r - 1),
                 new AxialCoordinateInt(center.q + 1, center.r - 1),
-                new AxialCoordinateInt(center.q + 1, center.r + 0),
-                new AxialCoordinateInt(center.q + 0, center.r + 1),
+                new AxialCoordinateInt(center.q + 0, center.r - 1),
+                new AxialCoordinateInt(center.q - 1, center.r + 0),
                 new AxialCoordinateInt(center.q - 1, center.r + 1),
-                new AxialCoordinateInt(center.q - 1, center.r + 0)
+                new AxialCoordinateInt(center.q + 0, center.r + 1),
+                new AxialCoordinateInt(center.q + 1, center.r + 0),
             };
         }
 

@@ -5,15 +5,15 @@ using UnityEngine;
 namespace de.JochenHeckl.Unity.HexMap.Samples
 {
     [RequireComponent(typeof(MeshFilter))]
-    public class BlockHexMap : MonoBehaviour
+    public class HexBlockMap : MonoBehaviour
     {
         public int meshOrder = 3;
-        public float tileRadius = 42f;
-        public float blockHeight = 10f;
-        public float heightVariation = 20f;
+        public float tileRadius = 1f;
+        public int blockHeight = 5;
+        public int heightVariation = 2;
 
         private MeshFilter meshFiler;
-        private readonly TileDataStorageAxialCoordinateDictionary<BlockHexMapCell> rawTileStorage =
+        private readonly TileDataStorageAxialCoordinateDictionary<HexBlockMapCell> rawTileStorage =
             new();
 
         void Awake()
@@ -22,24 +22,26 @@ namespace de.JochenHeckl.Unity.HexMap.Samples
 
             rawTileStorage.CreateHexagonalMap(meshOrder);
 
-            var generator = new BlockHexMeshGenerator<BlockHexMapCell>(
+            var generator = new HexBlockMeshGenerator<HexBlockMapCell>(
                 tileRadius: tileRadius,
-                getBlockData: GetBlockData
+                getTileData: GetTileData
             );
 
-            meshFiler.sharedMesh = generator.GenerateMesh(rawTileStorage);
+            meshFiler.sharedMesh = generator.GenerateMesh(rawTileStorage.Tiles);
         }
 
-        public (Vector3 scale, Vector3 offset) GetBlockData(
+        public (Vector3 scale, Vector3 offset) GetTileData(
             AxialCoordinateInt coordinate,
-            BlockHexMapCell tileData
+            HexBlockMapCell tileData
         )
         {
             var baseVertex2D = coordinate.ToCartesian(tileRadius);
-            var blockdata = new BlockHexMeshGenerator<BlockHexMapCell>.BlockData()
+            var Height = Random.Range(blockHeight - heightVariation, blockHeight + heightVariation);
+
+            var blockdata = new HexBlockMeshGenerator<HexBlockMapCell>.BlockData()
             {
-                Height = blockHeight,
-                VerticalOffset = Random.Range(0f, heightVariation)
+                Height = Height,
+                VerticalOffset = Height
             };
 
             return (

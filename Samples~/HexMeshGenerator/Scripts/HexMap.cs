@@ -29,7 +29,7 @@ namespace de.JochenHeckl.Unity.HexMap.Samples
                 HexMeshGenerator<HexMapCell>.FlatTiles
             );
 
-            meshFiler.sharedMesh = generator.GenerateMesh(rawTileStorage);
+            meshFiler.sharedMesh = generator.GenerateMesh(rawTileStorage.Tiles);
         }
     }
 }

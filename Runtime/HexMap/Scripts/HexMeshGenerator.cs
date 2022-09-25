@@ -12,9 +12,11 @@ namespace de.JochenHeckl.Unity.HexMap
     /// Generates a simple hexagonal mesh
     /// </summary>
     /// <typeparam name="TileDataType"></typeparam>
-    public class HexMeshGenerator<TileDataType> : IHexMeshGenerator<TileDataType>
+    public class HexMeshGenerator<TileDataType> : HexMeshGeneratorBase<TileDataType>
         where TileDataType : ITileData
     {
+        Dictionary<AxialCoordinateInt, int[]> tileVertexIndices = new();
+
         private readonly Vector3[] tileVertexOffsetsNorm = new Vector3[]
         {
             Vector3.zero,
@@ -48,165 +50,106 @@ namespace de.JochenHeckl.Unity.HexMap
             6
         };
 
-        private float hexRadius;
-        private Func<Vector2, float> getTileHeight;
-
-        public static float FlatTiles(Vector2 _) => 0f;
-
-        public HexMeshGenerator(float hexRadius, Func<Vector2, float> getTileHeight)
+        private readonly Vector2[] tileUvs = new Vector2[]
         {
-            this.hexRadius = hexRadius;
-            this.getTileHeight = getTileHeight;
+            Vector2.zero,
+            new Vector2(1f, 0f),
+            new Vector2(1f, 0f),
+            new Vector2(1f, 0f),
+            new Vector2(1f, 0f),
+            new Vector2(1f, 0f),
+            new Vector2(1f, 0f)
+        };
+
+        private float tileRadius;
+        private Func<AxialCoordinateInt, TileDataType, (Vector3 scale, Vector3 offset)> getTileData;
+
+        public HexMeshGenerator(
+            float tileRadius,
+            Func<AxialCoordinateInt, TileDataType, (Vector3 scale, Vector3 offset)> getTileData
+        )
+        {
+            this.tileRadius = tileRadius;
+            this.getTileData = getTileData;
         }
 
-        public Mesh GenerateMesh(ITileDataStorage<TileDataType> dataSourceIn)
+        protected override void PrepareGeneration()
         {
-            var vertices = new List<Vector3>();
-            var uvs = new List<Vector2>();
+            tileVertexIndices = new();
+        }
 
-            var generatedTiles = new Dictionary<AxialCoordinateInt, int[]>();
-
-            foreach (var tile in dataSourceIn.Tiles.Select(x => x.coordinate))
-            {
-                MakeTileMeshData(hexRadius, tile, vertices, uvs, generatedTiles);
-            }
-
-            var mesh = new Mesh();
-            mesh.indexFormat =
-                (vertices.Count < ushort.MaxValue) ? IndexFormat.UInt16 : IndexFormat.UInt32;
-
-            mesh.vertices = vertices.ToArray();
-            mesh.uv = uvs.ToArray();
-
-            mesh.subMeshCount = 1;
-            mesh.triangles = generatedTiles
-                .SelectMany(t => tileIndices.Select(x => t.Value[x]))
-                .ToArray();
-
+        protected override Mesh FinalizeGeneration(Mesh mesh)
+        {
             return mesh;
         }
 
-        private void MakeTileMeshData(
-            float hexRadius,
-            AxialCoordinateInt tileCoordinate,
+        protected override void AppendTileMeshData(
+            AxialCoordinateInt coordinate,
+            TileDataType tileData,
             List<Vector3> vertices,
             List<Vector2> uvs,
-            Dictionary<AxialCoordinateInt, int[]> tileTriangleIndices
+            List<int> triangleIndices
         )
         {
-            var baseVertex = GetTilePosition(tileCoordinate, hexRadius);
+            var (scale, offset) = getTileData(coordinate, tileData);
+            var neighbourCoordinates = AxialCoordinateInt.Neighbours(coordinate);
 
-            tileTriangleIndices[tileCoordinate] = Enumerable.Range(vertices.Count, 7).ToArray();
+            var currentTileVertexIndices = new int[7];
 
-            vertices.Add(baseVertex);
-            uvs.Add(new Vector2(0, 1));
+            // add center vertex
+            currentTileVertexIndices[0] = vertices.Count();
+            vertices.Add(Vector3.Scale(tileVertexOffsetsNorm[0], scale) + offset);
+            uvs.Add(tileUvs[0]);
 
-            var missingOuterVertices = new bool[6] { true, true, true, true, true, true };
-
-            // test lower right
-            if (
-                tileTriangleIndices.TryGetValue(
-                    tileCoordinate + (1, 0),
-                    out var lowerRightTileIndices
-                )
-            )
+            for (var outerVertex = 1; outerVertex < 7; outerVertex++)
             {
-                tileTriangleIndices[tileCoordinate][1] = lowerRightTileIndices[5];
-                missingOuterVertices[0] = false;
+                var firstNeighbour = neighbourCoordinates[(outerVertex + 4) % 6];
 
-                tileTriangleIndices[tileCoordinate][2] = lowerRightTileIndices[4];
-                missingOuterVertices[1] = false;
-            }
+                int[] sharedIndices;
 
-            if (tileTriangleIndices.TryGetValue(tileCoordinate + (0, 1), out var lowerTileIndices))
-            {
-                tileTriangleIndices[tileCoordinate][2] = lowerTileIndices[6];
-                missingOuterVertices[1] = false;
-
-                tileTriangleIndices[tileCoordinate][3] = lowerTileIndices[5];
-                missingOuterVertices[2] = false;
-            }
-
-            if (
-                tileTriangleIndices.TryGetValue(
-                    tileCoordinate + (-1, 1),
-                    out var lowerLeftTileIndices
-                )
-            )
-            {
-                tileTriangleIndices[tileCoordinate][3] = lowerLeftTileIndices[1];
-                missingOuterVertices[2] = false;
-
-                tileTriangleIndices[tileCoordinate][4] = lowerLeftTileIndices[6];
-                missingOuterVertices[3] = false;
-            }
-
-            if (
-                tileTriangleIndices.TryGetValue(
-                    tileCoordinate + (-1, 0),
-                    out var upperLeftTileIndices
-                )
-            )
-            {
-                tileTriangleIndices[tileCoordinate][4] = upperLeftTileIndices[2];
-                missingOuterVertices[3] = false;
-
-                tileTriangleIndices[tileCoordinate][5] = upperLeftTileIndices[1];
-                missingOuterVertices[4] = false;
-            }
-
-            if (tileTriangleIndices.TryGetValue(tileCoordinate + (0, -1), out var upperTileIndices))
-            {
-                tileTriangleIndices[tileCoordinate][5] = upperTileIndices[3];
-                missingOuterVertices[4] = false;
-
-                tileTriangleIndices[tileCoordinate][6] = upperTileIndices[2];
-                missingOuterVertices[5] = false;
-            }
-
-            if (
-                tileTriangleIndices.TryGetValue(
-                    tileCoordinate + (1, -1),
-                    out var upperRightTileIndices
-                )
-            )
-            {
-                tileTriangleIndices[tileCoordinate][6] = upperRightTileIndices[4];
-                missingOuterVertices[5] = false;
-
-                tileTriangleIndices[tileCoordinate][1] = upperRightTileIndices[3];
-                missingOuterVertices[0] = false;
-            }
-
-            for (
-                var missingOuterVertexIdx = 0;
-                missingOuterVertexIdx < missingOuterVertices.Length;
-                missingOuterVertexIdx++
-            )
-            {
-                if (missingOuterVertices[missingOuterVertexIdx])
+                if (tileVertexIndices.TryGetValue(firstNeighbour, out sharedIndices))
                 {
-                    tileTriangleIndices[tileCoordinate][missingOuterVertexIdx + 1] = vertices.Count;
+                    var matchingVertexIndex = 1 + ((outerVertex + 1) % 6);
+                    currentTileVertexIndices[outerVertex] = sharedIndices[matchingVertexIndex];
 
-                    var vertexOffset = hexRadius * tileVertexOffsetsNorm[missingOuterVertexIdx + 1];
+                    var existingVertexPos = vertices[sharedIndices[matchingVertexIndex]];
+                    var curVertexPos =
+                        Vector3.Scale(tileVertexOffsetsNorm[outerVertex], scale) + offset;
 
-                    vertices.Add(
-                        baseVertex
-                            + new Vector3(
-                                vertexOffset.x,
-                                getTileHeight(new Vector2(vertexOffset.x, vertexOffset.z)),
-                                vertexOffset.z
-                            )
-                    );
-                    uvs.Add(new Vector2(1, 0));
+                    if (Vector3.Distance(existingVertexPos, curVertexPos) > 1f)
+                    {
+                        throw new InvalidProgramException();
+                    }
+
+                    continue;
                 }
-            }
-        }
 
-        public Vector3 GetTilePosition(AxialCoordinateInt tileCoordinate, float hexRadius)
-        {
-            var baseVertex2D = tileCoordinate.ToCartesian(hexRadius);
-            return new Vector3(baseVertex2D.x, getTileHeight(baseVertex2D), baseVertex2D.y);
+                var secondNeighbour = neighbourCoordinates[outerVertex - 1];
+
+                if (tileVertexIndices.TryGetValue(secondNeighbour, out sharedIndices))
+                {
+                    var matchingVertexIndex = 1 + ((outerVertex + 3) % 6);
+                    currentTileVertexIndices[outerVertex] = sharedIndices[matchingVertexIndex];
+
+                    var existingVertexPos = vertices[sharedIndices[matchingVertexIndex]];
+                    var curVertexPos =
+                        Vector3.Scale(tileVertexOffsetsNorm[outerVertex], scale) + offset;
+
+                    if (Vector3.Distance(existingVertexPos, curVertexPos) > 1f)
+                    {
+                        throw new InvalidProgramException();
+                    }
+
+                    continue;
+                }
+
+                currentTileVertexIndices[outerVertex] = vertices.Count();
+                vertices.Add(Vector3.Scale(tileVertexOffsetsNorm[outerVertex], scale) + offset);
+                uvs.Add(tileUvs[outerVertex]);
+            }
+
+            triangleIndices.AddRange(tileIndices.Select(x => currentTileVertexIndices[x]));
+            tileVertexIndices[coordinate] = currentTileVertexIndices;
         }
     }
 }

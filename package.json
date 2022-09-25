@@ -7,9 +7,9 @@
   "type": "library",
   "samples": [
     {
-      "displayName": "BlockMeshGenerator",
-      "description": "Simple example demonstrating BlockMeshGenerator",
-      "path": "Samples~/BlockMeshGenerator"
+      "displayName": "HexBlockMeshGenerator",
+      "description": "Simple example demonstrating HexBlockMeshGenerator",
+      "path": "Samples~/HexBlockMeshGenerator"
     },
     {
       "displayName": "HexMeshGenerator",

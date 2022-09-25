@@ -1,6 +1,7 @@
 ﻿/// Thanks Amit! https://www.redblobgames.com/grids/hexagons
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -129,26 +130,20 @@ namespace de.JochenHeckl.Unity.HexMap
             getTileHeightLevel = getTileHeightLevelIn;
         }
 
-        public Mesh GenerateMesh(ITileDataStorage<TileDataType> dataSourceIn)
+        public Mesh GenerateMesh(
+            IEnumerable<(AxialCoordinateInt coordinate, TileDataType data)> tiles
+        )
         {
             var vertexCount =
-                dataSourceIn.TileCount
-                * (tileVertexOffsetsNorm.Length + borderVertexOffsetsNorm.Length);
+                tiles.Count() * (tileVertexOffsetsNorm.Length + borderVertexOffsetsNorm.Length);
             var indexFormat =
                 (vertexCount < ushort.MaxValue) ? IndexFormat.UInt16 : IndexFormat.UInt32;
 
-            var tileMeshes = dataSourceIn.Tiles.Select(
+            var tileMeshes = tiles.Select(
                 x => MakeTileCombineInstance(x.coordinate, hexRadius, borderWidth, indexFormat)
             );
-            var borderMeshes = dataSourceIn.Tiles.Select(
-                x =>
-                    MakeBorderCombineInstance(
-                        dataSourceIn,
-                        x.coordinate,
-                        hexRadius,
-                        borderWidth,
-                        indexFormat
-                    )
+            var borderMeshes = tiles.Select(
+                x => MakeBorderCombineInstance(x.coordinate, hexRadius, borderWidth, indexFormat)
             );
 
             var subMeshes = tileMeshes
@@ -162,6 +157,13 @@ namespace de.JochenHeckl.Unity.HexMap
             mesh.Optimize();
 
             return mesh;
+        }
+
+        public Mesh GenerateMesh(
+            IEnumerable<IEnumerable<(AxialCoordinateInt coordinate, TileDataType data)>> tileGroups
+        )
+        {
+            throw new NotImplementedException();
         }
 
         private CombineInstance MakeTileCombineInstance(
@@ -195,7 +197,6 @@ namespace de.JochenHeckl.Unity.HexMap
         }
 
         private CombineInstance MakeBorderCombineInstance(
-            ITileDataStorage<TileDataType> dataSourceIn,
             AxialCoordinateInt tile,
             float hexRadius,
             float borderWidth,

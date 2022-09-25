@@ -12,7 +12,7 @@ namespace de.JochenHeckl.Unity.HexMap
     /// Generates a mesh made out of hexagonal blocks
     /// </summary>
     /// <typeparam name="TileDataType"></typeparam>
-    public class BlockHexMeshGenerator<TileDataType> : IHexMeshGenerator<TileDataType>
+    public class HexBlockMeshGenerator<TileDataType> : IHexMeshGenerator<TileDataType>
         where TileDataType : ITileData
     {
         public struct BlockData
@@ -140,38 +140,52 @@ namespace de.JochenHeckl.Unity.HexMap
             8,
         };
 
-        private float hexRadius;
-        private Func<
-            AxialCoordinateInt,
-            TileDataType,
-            (Vector3 scale, Vector3 offset)
-        > getBlockData;
+        private float tileRadius;
+        private Func<AxialCoordinateInt, TileDataType, (Vector3 scale, Vector3 offset)> getTileData;
 
-        public BlockHexMeshGenerator(
+        public HexBlockMeshGenerator(
             float tileRadius,
-            Func<AxialCoordinateInt, TileDataType, (Vector3 scale, Vector3 offset)> getBlockData
+            Func<AxialCoordinateInt, TileDataType, (Vector3 scale, Vector3 offset)> getTileData
         )
         {
-            this.hexRadius = tileRadius;
-            this.getBlockData = getBlockData;
+            this.tileRadius = tileRadius;
+            this.getTileData = getTileData;
         }
 
-        public Mesh GenerateMesh(ITileDataStorage<TileDataType> dataSourceIn)
+        public Mesh GenerateMesh(
+            IEnumerable<(AxialCoordinateInt coordinate, TileDataType data)> tiles
+        )
+        {
+            return GenerateMesh(
+                new IEnumerable<(AxialCoordinateInt coordinate, TileDataType data)>[] { tiles }
+            );
+        }
+
+        public Mesh GenerateMesh(
+            IEnumerable<IEnumerable<(AxialCoordinateInt coordinate, TileDataType data)>> tileGroups
+        )
         {
             var vertices = new List<Vector3>();
             var uvs = new List<Vector2>();
+            var subMeshes = new List<int[]>();
 
-            var blockTriangleIndices = new List<int>();
-
-            foreach (var tileData in dataSourceIn.Tiles)
+            foreach (var tileGroup in tileGroups)
             {
-                AppendBlockMeshData(
-                    tileData.coordinate,
-                    tileData.data,
-                    vertices,
-                    uvs,
-                    blockTriangleIndices
-                );
+                var startIndex = vertices.Count();
+                var blockTriangleIndices = new List<int>();
+
+                foreach (var tileData in tileGroup)
+                {
+                    AppendBlockMeshData(
+                        tileData.coordinate,
+                        tileData.data,
+                        vertices,
+                        uvs,
+                        blockTriangleIndices
+                    );
+                }
+
+                subMeshes.Add((blockTriangleIndices.ToArray()));
             }
 
             var mesh = new Mesh();
@@ -181,8 +195,20 @@ namespace de.JochenHeckl.Unity.HexMap
             mesh.vertices = vertices.ToArray();
             mesh.uv = uvs.ToArray();
 
-            mesh.subMeshCount = 1;
-            mesh.triangles = blockTriangleIndices.ToArray();
+            mesh.subMeshCount = subMeshes.Count;
+
+            for (
+                var subMeshDescriptorIndex = 0;
+                subMeshDescriptorIndex < mesh.subMeshCount;
+                subMeshDescriptorIndex++
+            )
+            {
+                mesh.SetIndices(
+                    subMeshes[subMeshDescriptorIndex],
+                    MeshTopology.Triangles,
+                    subMeshDescriptorIndex
+                );
+            }
 
             return mesh;
         }
@@ -196,12 +222,10 @@ namespace de.JochenHeckl.Unity.HexMap
         )
         {
             var blockBaseIndex = vertices.Count;
-            var (vertexScale, vertexOffset) = getBlockData(coordinate, tileData);
+            var (vertexScale, vertexOffset) = getTileData(coordinate, tileData);
 
             var blockVertices = blockVertexOffsetsNorm.Select(
-                x =>
-                    new Vector3((x.x * vertexScale.x), (x.y * vertexScale.y), (x.z * vertexScale.z))
-                    + vertexOffset
+                x => Vector3.Scale(x, vertexScale) + vertexOffset
             );
 
             vertices.AddRange(blockVertices);
