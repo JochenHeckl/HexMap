@@ -348,8 +348,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 961739749}
-  m_LocalRotation: {x: 0.38543424, y: -0.33956143, z: 0.15494785, w: 0.8438778}
-  m_LocalPosition: {x: 244.88544, y: 314.85208, z: -238.31374}
+  m_LocalRotation: {x: 0.050859425, y: 0.94128984, z: -0.28965527, w: 0.16579103}
+  m_LocalPosition: {x: -21.962416, y: 46.517155, z: 57.83716}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -366,10 +366,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1037895267}
   - component: {fileID: 1037895270}
-  - component: {fileID: 1037895269}
   - component: {fileID: 1037895268}
+  - component: {fileID: 1037895269}
   m_Layer: 0
-  m_Name: HexMap
+  m_Name: HexWithInsetBorderMap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -409,7 +409,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
+  m_StaticShadowCaster: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -418,7 +418,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9fb7526b26542224cb89af0c03e88d0f, type: 2}
+  - {fileID: 2100000, guid: 205b43ce748d2eb45a66925a84a8ac04, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -449,8 +449,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1037895266}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1099ded3cc87029478b9dd853356e849, type: 3}
+  m_Script: {fileID: 11500000, guid: 06136fae1b0e761469cf6698fcb763f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   meshOrder: 3
-  tileRadius: 42
+  tileRadius: 10
+  borderWidth: 1
+  blockHeight: 5
+  heightVariation: 3
