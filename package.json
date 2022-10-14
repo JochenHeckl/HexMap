@@ -15,6 +15,12 @@
       "displayName": "HexMeshGenerator",
       "description": "Simple example demonstrating HexMeshGenerator",
       "path": "Samples~/HexMeshGenerator"
+    },
+    {
+      "displayName": "HexWithInsetBorderMeshGenerator",
+      "description": "Simple example demonstrating HexWithInsetBorderMeshGenerator",
+      "path": "Samples~/HexWithInsetBorderMeshGenerator"
     }
+    
   ]
 }
